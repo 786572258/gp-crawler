@@ -184,7 +184,6 @@ class Crawler
     */
     public static function getHardenContinuous($frontDay) {
 
-        $frontDay = 6;
         $curl = curl_init();
         $date = date('Ymd',strtotime("-{$frontDay} day"));
         echo "日期:" . $date;
