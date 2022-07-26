@@ -196,22 +196,28 @@ class Service
 
 
     public static function notice($thsResponse) {
+        $data = self::getThsData($thsResponse);
+//        echo pj($data);exit();
         file_put_contents("run.txt", "调度执行-". date("Y-m-d H:i:s") ."\n", FILE_APPEND);
         $checkDayStr = date('Y-m-d ',time());
         $currTime = time();
-        $timeBegin940 = strtotime($checkDayStr."09:40".":00");
+        $timeBegin940 = strtotime($checkDayStr."09:37".":00");
         $timeEnd1020 = strtotime($checkDayStr."10:20".":00");
 
         $timeBegin1300 = strtotime($checkDayStr."13:00".":00");
         $timeEnd1350 = strtotime($checkDayStr."13:50".":00");
         if ($currTime < $timeBegin940 || ($currTime >= $timeEnd1020 && $currTime < $timeBegin1300)) {
-            die("不在打板时间范围");
+            echo ("不在打板时间范围");
+            return;
         } else if ($currTime < $timeBegin1300 || $currTime >= $timeEnd1350) {
-            die("不在打板时间范围");
+            echo ("不在打板时间范围");
+            return;
         }
 
         $i = 0;
-        while($i < 10) {
+        while(true) {
+            throw new Exception("没有数据");
+
             global $db;
             $data = self::getThsData($thsResponse);
             if (!@$thsResponse || !$data || @!$data["datas"]) {
@@ -220,22 +226,23 @@ class Service
             }
             $datas = $data["datas"];
             //提取日期
-            foreach ($datas as $k => $v) {
-                foreach ($v as $kk => $vv) {
-                    if (strstr($kk, "5日涨速[")) {
-                        preg_match("/5日涨速\[(\d*)\]/s", $kk, $res);
-                        $date = $res[1];
-                        break 2;
-                    }
-                }
-                exit();
-            }
-            if (!$date) {
-                file_put_contents("run.txt", "获取日期失败". date("yy-mm-dd H:i:s") ."\n", FILE_APPEND);
-                echo "获取日期失败";
-                exit();
-            }
+//            foreach ($datas as $k => $v) {
+//                foreach ($v as $kk => $vv) {
+//                    if (strstr($kk, "5日涨速[")) {
+//                        preg_match("/5日涨速\[(\d*)\]/s", $kk, $res);
+//                        $date = $res[1];
+//                        break 2;
+//                    }
+//                }
+//                exit();
+//            }
+//            if (!$date) {
+//                file_put_contents("run.txt", "获取日期失败". date("yy-mm-dd H:i:s") ."\n", FILE_APPEND);
+//                echo "获取日期失败";
+//                exit();
+//            }
 
+            $date = date("Ymd");
             $hour = date("H");
             $battledoreNoticeList = self::getBattledoreNoticeList($date);
             $noticeMsg = "符合二板模式:";
@@ -263,7 +270,7 @@ class Service
                 file_put_contents("run.txt", "推送结果:".$sendResult. date("yy-mm-dd H:i:s") ."\n", FILE_APPEND);
             }
             $i++;
-            sleep(6);
+            sleep(3);
         }
     }
 
