@@ -13,19 +13,9 @@ require_once  "crawler.php";
 
  */
 function main() {
-    //获取同花顺符合二板模式的个股
-//    $thsResponse = Crawler::getSecondBoardGp();
-    while(1) {
-        file_put_contents("run.txt", "调度执行-". date("Y-m-d H:i:s") ."\n", FILE_APPEND);
-        $thsResponse = Crawler::getSecondBoardGpByCookie();
-        //    echo ($thsResponse);
-        //    exit();
-        Service::notice($thsResponse);
-        sleep(3);
-
-    }
-
-    echo "done";
+    $thsResponse = Crawler::getSecondBoardGpByCookie();
+    $data = Service::getThsData($thsResponse);
+    pj($data);exit();
 }
 
 main();

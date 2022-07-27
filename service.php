@@ -10,6 +10,8 @@ class Service
 
     public static function getThsData($response) {
         $response = json_decode($response, true);
+//        p($response);
+//        exit();
         $data = @$response["data"]["answer"]["0"]["txt"][0]["content"]["components"][0]["data"];
         if (!$data) {
             $data = @$response["answer"]["components"][0]["data"];
@@ -197,8 +199,12 @@ class Service
 
     public static function notice($thsResponse) {
         $data = self::getThsData($thsResponse);
+        if (!$data) {
+            echo "没有数据";
+            return;
+        }
 //        echo pj($data);exit();
-        file_put_contents("run.txt", "调度执行-". date("Y-m-d H:i:s") ."\n", FILE_APPEND);
+
         $checkDayStr = date('Y-m-d ',time());
         $currTime = time();
         $timeBegin940 = strtotime($checkDayStr."09:37".":00");
@@ -209,23 +215,19 @@ class Service
         if ($currTime < $timeBegin940 || ($currTime >= $timeEnd1020 && $currTime < $timeBegin1300)) {
             echo ("不在打板时间范围");
             return;
+
         } else if ($currTime < $timeBegin1300 || $currTime >= $timeEnd1350) {
             echo ("不在打板时间范围");
             return;
         }
 
-        $i = 0;
-        while(true) {
+        global $db;
+        if (!@$thsResponse || !$data || @!$data["datas"]) {
             throw new Exception("没有数据");
-
-            global $db;
-            $data = self::getThsData($thsResponse);
-            if (!@$thsResponse || !$data || @!$data["datas"]) {
-                throw new Exception("没有数据");
-                return false;
-            }
-            $datas = $data["datas"];
-            //提取日期
+            return false;
+        }
+        $datas = $data["datas"];
+        //提取日期
 //            foreach ($datas as $k => $v) {
 //                foreach ($v as $kk => $vv) {
 //                    if (strstr($kk, "5日涨速[")) {
@@ -242,35 +244,32 @@ class Service
 //                exit();
 //            }
 
-            $date = date("Ymd");
-            $hour = date("H");
-            $battledoreNoticeList = self::getBattledoreNoticeList($date);
-            $noticeMsg = "符合二板模式:";
-            $r = 0;
-            foreach ($datas as $k => $v) {
-                foreach($battledoreNoticeList as $battledoreNoticeKey => $battledoreNotice) {
-                    if ($v["股票简称"] == $battledoreNotice["gpname"] && $hour == $battledoreNotice["hour"]) {
-                        echo "存在,跳过";
-                        continue 2;
-                    }
+        $date = date("Ymd");
+        $hour = date("H");
+        $battledoreNoticeList = self::getBattledoreNoticeList($date);
+        $noticeMsg = "符合二板模式:";
+        $r = 0;
+        foreach ($datas as $k => $v) {
+            foreach($battledoreNoticeList as $battledoreNoticeKey => $battledoreNotice) {
+                if ($v["股票简称"] == $battledoreNotice["gpname"] && $hour == $battledoreNotice["hour"]) {
+                    echo "存在,跳过";
+                    continue 2;
                 }
-                $battledore_notice_arr = [
-                    "gpname" => $v["股票简称"],
-                    "date" => $date,
-                    "hour" => $hour,
-                ];
-                $r = $db->insert("battledore_notice", $battledore_notice_arr);
-                $id = $db->getLastId();
-                $noticeMsg .= $v["股票简称"]." ";
             }
-            if ($r) {
-                //消息通知
-                $sendResult = sendMail("595171801@qq.com", $noticeMsg, $noticeMsg);
-                echo "推送结果:".$sendResult;
-                file_put_contents("run.txt", "推送结果:".$sendResult. date("yy-mm-dd H:i:s") ."\n", FILE_APPEND);
-            }
-            $i++;
-            sleep(3);
+            $battledore_notice_arr = [
+                "gpname" => $v["股票简称"],
+                "date" => $date,
+                "hour" => $hour,
+            ];
+            $r = $db->insert("battledore_notice", $battledore_notice_arr);
+            $id = $db->getLastId();
+            $noticeMsg .= $v["股票简称"]." ";
+        }
+        if ($r) {
+            //消息通知
+            $sendResult = sendMail("595171801@qq.com", $noticeMsg, $noticeMsg);
+            echo "推送结果:".$sendResult;
+            file_put_contents("run.txt", "推送结果:".$sendResult. date("yy-mm-dd H:i:s") ."\n", FILE_APPEND);
         }
     }
 
