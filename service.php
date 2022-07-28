@@ -197,7 +197,7 @@ class Service
 
     public static function notice($thsResponse) {
         $data = self::getThsData($thsResponse);
-//        echo pj($data);exit();
+        echo pj($data);exit();
         file_put_contents("run.txt", "调度执行-". date("Y-m-d H:i:s") ."\n", FILE_APPEND);
         $checkDayStr = date('Y-m-d ',time());
         $currTime = time();
