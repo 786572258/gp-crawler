@@ -223,29 +223,37 @@ class Crawler
     }
 
 
-    //获取同花顺符合二板模式的个股
+    //1分钟涨幅；开盘涨跌幅>=-1.5<8；一个交易日前涨停且股价20元以内且流通市值15-110亿且筹码获利比例大于60%；非一字板
     static function getSecondBoardGp() {
-        $curl = curl_init();
-//        20220722
-        $query = file_get_contents('getSecondBoardGpQuery.txt');
+        $jsonquery = file_get_contents("jsonquery.json");
         $date = date('Ymd', time());
-////        $query = str_replace("20220722", "20220721", $query);
-////        $query = str_replace("20220725", "20220722", $query);
-//        $dateFront = "";
-//        if (date('w', time()) == 1 ) {
-//             $dateFront = date('Ymd',strtotime("-3 day"));
-//        } else {
-//            $dateFront = date('Ymd',strtotime("-1 day"));
-//        }
-////        $dateFront = date('Ymd',strtotime("-7 day"));
-////        $date = date('Ymd',strtotime("-6 day"));
-//        $query = str_replace("20220722", $dateFront, $query);
-//        $query = str_replace("20220725", $date, $query);
+        $dateFront = date('Ymd', strtotime("-1 day"));
+//        $jsonquery = str_replace("20220727", "20220726", $jsonquery);
+//        $jsonquery = str_replace("20220728", "20220727", $jsonquery);
 
-//        echo urldecode($query);
+        $minuteFront = date('H:i', strtotime("-1 minute"));
+        $minute = date('H:i', time());
+
+        $jsonquery = str_replace("20220727", $dateFront, $jsonquery);
+        $jsonquery = str_replace("20220728", $date, $jsonquery);
+        $jsonquery = str_replace("14:59", $minuteFront, $jsonquery);
+        $jsonquery = str_replace("15:00", $minute, $jsonquery);
+
+//        $jsonquery = str_replace("14:59", "13:17", $jsonquery);
+//        $jsonquery = str_replace("15:00", "13:18", $jsonquery);
+
+//        echo ($jsonquery);exit();
+        $query = http_build_query(json_decode($jsonquery));
+//p($query);
 //        exit();
 
-            curl_setopt_array($curl, array(
+        $curl = curl_init();
+//        20220722
+//        $query = file_get_contents('getSecondBoardGpQuery.txt');
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
             CURLOPT_URL => 'http://ai.iwencai.com/urp/v7/landing/getDataList',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
@@ -261,7 +269,7 @@ class Crawler
                 'Cache-control: no-cache',
                 'Connection: keep-alive',
                 'Content-Type: application/x-www-form-urlencoded',
-                'Cookie: cid=78507239c6883680d9d2953835a75ec31637978778; v=A-w7rX0nomfaO7ZfeHyPpDKDu8EbpY5Mkiynm0ci-XM7xYL_brVg3-JZdeOV',
+                'Cookie: cid=78507239c6883680d9d2953835a75ec31637978778; v=A3SjNSWPqn5tgz4JJcaXTOqrQznjTZtO2mkt8A60AuyDQhpnNl1oxyqB_JJd',
                 'Origin: http://www.iwencai.com',
                 'Pragma: no-cache',
                 'Referer: http://www.iwencai.com/',
@@ -296,8 +304,17 @@ class Crawler
                 'Connection: keep-alive',
                 'Content-Type: application/json',
                 'Cookie:' . file_get_contents("getSecondBoardGpQueryCookie.txt"),
-                'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
-                'hexin-v: A7ts2KbyXSK_vGGWlIOgSRn-TJQgEM-nySWTxq14lgTRK9VKNeBfYtn0IwC-'
+                'Origin: https://www.iwencai.com',
+                'Pragma: no-cache',
+                'Referer: https://www.iwencai.com/unifiedwap/result?w=%E8%BF%911%E5%88%86%E9%92%9F%E5%8C%BA%E9%97%B4%E6%B6%A8%E8%B7%8C%E5%B9%85%E5%A4%A7%E4%BA%8E4.5%EF%BC%9B%E5%BC%80%E7%9B%98%E6%B6%A8%E8%B7%8C%E5%B9%85%3E%3D-1.5%3C8%EF%BC%9B%E4%B8%80%E4%B8%AA%E4%BA%A4%E6%98%93%E6%97%A5%E5%89%8D%E6%B6%A8%E5%81%9C%E4%B8%94%E8%82%A1%E4%BB%B720%E5%85%83%E4%BB%A5%E5%86%85%E4%B8%94%E6%B5%81%E9%80%9A%E5%B8%82%E5%80%BC15-110%E4%BA%BF%E4%B8%94%E7%AD%B9%E7%A0%81%E8%8E%B7%E5%88%A9%E6%AF%94%E4%BE%8B%E5%A4%A7%E4%BA%8E60%25%EF%BC%9B%E9%9D%9E%E4%B8%80%E5%AD%97%E6%9D%BF&querytype=stock&addSign=1658920404582',
+                'Sec-Fetch-Dest: empty',
+                'Sec-Fetch-Mode: cors',
+                'Sec-Fetch-Site: same-origin',
+                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36',
+                'hexin-v: A9KR0K7T5IwkFxhw0U9FSNOWI5Ox49TICOTKsZwo_IVwunwNhHMmjdh3Gr9v',
+                'sec-ch-ua: ".Not/A)Brand";v="99", "Google Chrome";v="103", "Chromium";v="103"',
+                'sec-ch-ua-mobile: ?0',
+                'sec-ch-ua-platform: "Windows"'
             ),
         ));
 
